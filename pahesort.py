@@ -2,6 +2,7 @@ import os
 import shutil
 import re
 import argparse
+from pathlib import Path
 
 def gather_anime(path: str):
     """
@@ -71,7 +72,7 @@ def rename_anime(path: str, animepahe: bool = False):
                         continue
 
                     os.rename(file, new_filename)
-                    print(f"Renamed {file} --> {new_filename}\n")
+                    print(f"Renamed file ({file}) --> ({new_filename})\n")
     else:
         print(f"\nAll Animepahe file has been renamed\n\nDirectory Cleaned -> {path}\nFiles Current path -> {folder_path}")
 
@@ -92,21 +93,28 @@ def organize_anime(path: str, animepahe: bool = False):
     anime_files = [file for file in os.listdir() if os.path.isfile(file)]
     
     for file in anime_files:
+        # First regex pattern (e.g., "04-Sono_Bisque_Doll-720p")
         match = re.match(r"^\d+-(.*?)-\d+p", file)
+
+        # Alternative regex pattern (e.g., "04-Sono_Bisque_Doll-BD", "04-Sono_Bisque_Doll-sub")
+        if not match:
+            match = re.match(r"^\d+-(.*?)-[a-zA-Z]+", file)
 
         if match:
             anime_name = match.group(1).strip()
         else:
-            print(f"Skipping file: {file} (doesn't match expected format)")
+            print(f"\nSkipping file: {file} (doesn't match expected format)")
             continue
 
         anime_folder = os.path.join(folder_path, anime_name)
         
         if not os.path.exists(anime_folder):
             os.mkdir(anime_folder)
+            print("\n============================================================================")
+            print(f"\nCreated new folder {anime_name} at {folder_path}")
 
         shutil.move(file, os.path.join(anime_folder, file))
-        print(f"\nMoved {file} to {anime_folder}")
+        print(f"\nMoved file ({file}) to {anime_folder}")
 
 def main():
     """
@@ -121,7 +129,7 @@ def main():
     args = parser.parse_args()
     rearg = args.rename
     orgarg = args.organize
-    patharg = args.path or "/home/haxsys/Downloads"
+    patharg = args.path or Path.home() / "Downloads"
 
     if args.all:
         rename_anime(patharg, animepahe=True)
